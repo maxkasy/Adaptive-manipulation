@@ -3,25 +3,24 @@ library(furrr)
 source("Bayesian_optimization_routines.R")
 source("DGP_feature_manipulation.R")
 
-FUN = lossFreshIndiv
+FUN = lossFreshIndiv # function used to sample loss - based on the feature manipulation DGP
 K = 4 # dimension of argument of loss
 
-replications = 32
+replications = 32 # number of simulation replications
 
-nEval = 300
-nStart = 20
-Beta = matrix(runif(nStart * 4), nStart, 4) # rows corresponds to X we are optimizing over
-Loss = matrix(apply(Beta, 1, FUN), nStart, 1) # corresponds to Y - loss we are minimizing
+nEval = 300 # number of simulation draws
+nStart = 20 # size of warm-up sample (number of randomly drawn observations)
+Beta = matrix(runif(nStart * 4), nStart, 4) # rows corresponds to the arguments X that we are optimizing over
+Loss = matrix(apply(Beta, 1, FUN), nStart, 1) # this vector corresponds to Y - the loss that we are minimizing
 
-
-theta = matrix(rep(.5, K + 2), K + 2, 1) # hyper-parameters
-theta = maximize_marginal_LLH_update(X = Beta, Y = Loss, theta)
-
+theta = matrix(rep(.5, K + 2), K + 2, 1) # initial values for hyper-parameters
+theta = maximize_marginal_LLH_update(X = Beta, Y = Loss, theta) # tune hyper-parameters using the warm-up sample
 print(theta)
-xmin = rep(0, K)
-xmax = rep(1, K)
-nFeatures = 1000
-M = 5
+
+betamin = rep(0, K) # lower and upper bound for the coefficients
+betamax = rep(1, K)
+nFeatures = 1000 # number of features used for spectral-sampling approximation to the GP posterior
+M = 5 # number of restarts for optimization in Thompson sampling step
 
 
 # run simulations repatedly
@@ -29,7 +28,7 @@ plan(multisession)
 sim_data = future_map(1:replications,
                         ~ BayesianOptimization(FUN, nEval, 
                                 X = Beta, Y = Loss, 
-                                theta, xmin, xmax, nFeatures, M))
+                                theta, betamin, betamax, nFeatures, M))
 
 # combine loss from simulation replications into a matrix
 loss_matrix = 
@@ -60,5 +59,5 @@ average_loss %>%
                           ". Blue line shows smoothed average loss.")) +
     theme_light()
 
-ggsave("Simulation_output/average_lss_simulated.png",
+ggsave("Simulation_output/average_loss_simulated.png",
        width =7, height = 4)

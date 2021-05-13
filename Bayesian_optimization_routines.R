@@ -225,8 +225,7 @@ BayesianOptimization = function(FUN, nEval, X, Y, theta, xmin, xmax, nFeatures, 
     y_next <- as.matrix(FUN(as.vector(x_next)))
     X <- rbind(X, x_next) 
     Y <- rbind(Y, y_next)
-# MAX: instead use previous value as starting point, but only do a small number of update steps each time
-# and do this every period (maybe occasionally checking against random starting value)
+    
     if(i%%10==0){ # update hyperparameters every 10th iteration 
         theta_opt <- maximize_marginal_LLH_update(X, Y, theta_opt)
     }
