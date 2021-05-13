@@ -86,7 +86,7 @@ marginal_llh_grad = function(X, Y, theta){
       }
     } 
   }
-  dK_sdsigma2_f <- K/theta[d+1]
+  dK_sdsigma2_f <- C/theta[d+1]
   dK_sdsigma2_n <- diag(n)
   
   # KinvY KinvY'-Kinv 
